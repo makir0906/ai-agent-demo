@@ -1,3 +1,20 @@
+.todo-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.todo-text {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.todo-due-date {
+  display: block;
+  margin-top: 0.25rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
 :root {
   color-scheme: light;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -102,12 +119,6 @@ h1 {
   margin: 0;
   flex-shrink: 0;
   cursor: pointer;
-}
-
-.todo-text {
-  min-width: 0;
-  flex: 1;
-  overflow-wrap: anywhere;
 }
 
 .todo-item.is-completed .todo-text {

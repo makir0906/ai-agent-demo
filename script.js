@@ -1,14 +1,18 @@
+const { getDateValue, isDateValue, isDueDateAllowed } = window.todoDateUtils;
+
 const STORAGE_KEY = "todo-app-tasks";
 const MAX_TASKS = 100;
 
 const form = document.querySelector("#todo-form");
 const input = document.querySelector("#todo-input");
+const dueDateInput = document.querySelector("#due-date-input");
 const list = document.querySelector("#todo-list");
 const emptyMessage = document.querySelector("#empty-message");
 
-const newTask = (text) => ({
+const newTask = (text, dueDate) => ({
   id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
   text,
+  dueDate,
   completed: false,
 });
 
@@ -26,7 +30,8 @@ const loadTasks = () => {
         typeof task.id === "string" &&
         typeof task.text === "string" &&
         task.text.length <= 100 &&
-        typeof task.completed === "boolean",
+        typeof task.completed === "boolean" &&
+        (task.dueDate === undefined || task.dueDate === "" || isDateValue(task.dueDate)),
     );
   } catch {
     return [];
@@ -43,6 +48,13 @@ const saveTasks = () => {
   }
 };
 
+const updateDueDateMinimum = () => {
+  dueDateInput.min = getDateValue(new Date());
+};
+
+dueDateInput.addEventListener("focus", updateDueDateMinimum);
+dueDateInput.addEventListener("input", updateDueDateMinimum);
+
 const createTaskItem = (task) => {
   const item = document.createElement("li");
   item.className = "todo-item";
@@ -55,9 +67,23 @@ const createTaskItem = (task) => {
   checkbox.checked = task.completed;
   checkbox.setAttribute("aria-label", `${task.text}を完了にする`);
 
+  const content = document.createElement("div");
+  content.className = "todo-content";
+
   const text = document.createElement("span");
   text.className = "todo-text";
   text.textContent = task.text;
+
+  const dueDate = document.createElement("time");
+  dueDate.className = "todo-due-date";
+  if (task.dueDate) {
+    dueDate.dateTime = task.dueDate;
+    dueDate.textContent = `期限日: ${task.dueDate}`;
+  } else {
+    dueDate.textContent = "期限日: 未設定";
+  }
+
+  content.append(text, dueDate);
 
   const deleteButton = document.createElement("button");
   deleteButton.type = "button";
@@ -65,7 +91,7 @@ const createTaskItem = (task) => {
   deleteButton.textContent = "削除";
   deleteButton.setAttribute("aria-label", `${task.text}を削除`);
 
-  item.append(checkbox, text, deleteButton);
+  item.append(checkbox, content, deleteButton);
   return item;
 };
 
@@ -94,10 +120,17 @@ const deleteTask = (taskId) => {
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
+  updateDueDateMinimum();
 
   const text = input.value.trim();
   if (!text) {
     input.focus();
+    return;
+  }
+
+  const dueDate = dueDateInput.value;
+  if (!isDueDateAllowed(dueDate)) {
+    dueDateInput.focus();
     return;
   }
 
@@ -106,10 +139,11 @@ form.addEventListener("submit", (event) => {
     return;
   }
 
-  tasks.push(newTask(text));
+  tasks.push(newTask(text, dueDate));
   saveTasks();
   render();
   input.value = "";
+  dueDateInput.value = "";
   input.focus();
 });
 
@@ -131,5 +165,6 @@ list.addEventListener("click", (event) => {
   }
 });
 
+updateDueDateMinimum();
 render();
 
